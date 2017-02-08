@@ -17,10 +17,9 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     @IBOutlet weak var searchBar: UISearchBar!
     
     var refreshControl: UIRefreshControl!
-    
     var movies: [NSDictionary]? = []
-    
     var filteredMovies: [NSDictionary]?
+    var endpoint: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,21 +29,8 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         searchBar.delegate = self
         
         MBProgressHUD.showAdded(to: self.view, animated: true)
-        let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
-        let url = URL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")!
-        let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
-        let session = URLSession(configuration: .default, delegate: nil, delegateQueue: OperationQueue.main)
-        let task: URLSessionDataTask = session.dataTask(with: request) { (data: Data?, response: URLResponse?, error: Error?) in
-            MBProgressHUD.hide(for: self.view, animated: true)
-            if let data = data {
-                if let dataDictionary = try! JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary {
-                    self.movies = dataDictionary["results"] as! [NSDictionary]
-                    self.filteredMovies = self.movies
-                    self.tableView.reloadData()
-                }
-            }
-        }
-        task.resume()
+        networkRequest()
+        MBProgressHUD.hide(for: self.view, animated: true)
         
         refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(self.refresh), for: UIControlEvents.valueChanged)
@@ -121,8 +107,13 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     }
         
     func refresh(sender:AnyObject) {
+        networkRequest()
+        self.refreshControl.endRefreshing()
+    }
+    
+    func networkRequest() {
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
-        let url = URL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")!
+        let url = URL(string: "https://api.themoviedb.org/3/movie/\(endpoint)?api_key=\(apiKey)")!
         let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
         let session = URLSession(configuration: .default, delegate: nil, delegateQueue: OperationQueue.main)
         let task: URLSessionDataTask = session.dataTask(with: request) { (data: Data?, response: URLResponse?, error: Error?) in
@@ -131,7 +122,6 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                     self.movies = dataDictionary["results"] as! [NSDictionary]
                     self.filteredMovies = self.movies
                     self.tableView.reloadData()
-                    self.refreshControl.endRefreshing()
                 }
             }
         }
