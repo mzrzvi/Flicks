@@ -86,6 +86,8 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
             )
         }
         
+        cell.selectionStyle = .none
+        
         print("row \(indexPath.row)")
         return cell
     }
